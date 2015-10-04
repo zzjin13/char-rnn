@@ -88,24 +88,6 @@ if opt.gpuid >= 0 and opt.opencl == 0 then
     end
 end
 
--- initialize clnn/cltorch for training on the GPU and fall back to CPU gracefully
-if opt.gpuid >= 0 and opt.opencl == 1 then
-    local ok, cunn = pcall(require, 'clnn')
-    local ok2, cutorch = pcall(require, 'cltorch')
-    if not ok then print('package clnn not found!') end
-    if not ok2 then print('package cltorch not found!') end
-    if ok and ok2 then
-        print('using OpenCL on GPU ' .. opt.gpuid .. '...')
-        cltorch.setDevice(opt.gpuid + 1) -- note +1 to make it 0 indexed! sigh lua
-        torch.manualSeed(opt.seed)
-    else
-        print('If cltorch and clnn are installed, your OpenCL driver may be improperly configured.')
-        print('Check your OpenCL driver installation, check output of clinfo command, and try again.')
-        print('Falling back on CPU mode')
-        opt.gpuid = -1 -- overwrite user setting
-    end
-end
-
 -- create the data loader class
 local loader = CharSplitLMMinibatchLoader.create(opt.data_dir, opt.batch_size, opt.seq_length, split_sizes)
 local vocab_size = loader.vocab_size  -- the number of distinct characters
